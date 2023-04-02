@@ -8,15 +8,23 @@ const path = require("path");
 const cors = require("cors");
 
 app.use(express.json())
-app.use(cors({
-  origin : "*"
-}))
-app.use((req, res, next) => {
+
+const corsOptions = {
+  origin: 'http://example.com:3004',
+};
+app.use(cors(corsOptions))
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+/*app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3004')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   next()
-})
+})*/
 
 
 const { open } = require("sqlite");
@@ -54,7 +62,7 @@ app.get("/getbooks/", async (request, response) => {
 });
 
 app.post("/addbook/", async (request, response) => {
-  const bookDetails = request.body;
+  const {bookDetails} = request.body;
   console.log(bookDetails)
   const {
     book_id,
@@ -69,10 +77,10 @@ app.post("/addbook/", async (request, response) => {
     VALUES
       (
         ${book_id},
-        '${book_title}',
-        '${book_author}',
+        ${book_title},
+        ${book_author},
         ${published},
-        '${book_description}',
+        ${book_description},
       );`;
 
   const dbResponse = await db.run(addBookQuery);
