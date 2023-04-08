@@ -1,24 +1,25 @@
 const express = require("express");
 const app = express();
 
-app.get("/", (request, response) => {
-  response.send("Hello World!");
-});
+
 const path = require("path");
 const cors = require("cors");
+const bp = require("body-parser");
 
-app.use(express.json())
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 
-const corsOptions = {
-  origin: 'http://example.com:3004',
-};
-app.use(cors(corsOptions))
+app.use(
+  cors({
+    methods: ["GET", "POST", "DELETE", "UPDATE", "PUT", "PATCH"],
+  })
+);
 
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
+app.use(bp.json());
+app.use(bp.urlencoded({ extended: true }));
 /*app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3004')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
@@ -34,14 +35,20 @@ const dbPath = path.join(__dirname, "bookDatabase.db");
 
 let db = null;
 
+const port = process.env.PORT || 3004;
+
+app.get("/", (request, response) => {
+  response.send("Hello World!");
+});
+
 const initializeDBAndServer = async () => {
   try {
     db = await open({
       filename: dbPath,
       driver: sqlite3.Database,
     });
-    app.listen(3002, () => {
-      console.log("Server Running at http://localhost:3002/");
+    app.listen(port, () => {
+      console.log(`Server Running at http://localhost:${port}/`);
     });
   } catch (e) {
     console.log(`DB Error: ${e.message}`);
@@ -51,7 +58,7 @@ const initializeDBAndServer = async () => {
 
 initializeDBAndServer();
 
-app.get("/getbooks/", async (request, response) => {
+app.get("/getbooks/", cors(), async (request, response) => {
   const getBooksQuery = `
     SELECT
       *
@@ -61,7 +68,7 @@ app.get("/getbooks/", async (request, response) => {
   response.send(booksArray);
 });
 
-app.post("/addbook/", async (request, response) => {
+app.post("/addbook/", cors(), async (request, response) => {
   const {bookDetails} = request.body;
   console.log(bookDetails)
   const {
